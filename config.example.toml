@@ -1,0 +1,97 @@
+# mcp-terminal configuration example.
+# Copy to ~/.config/mcp-terminal/config.toml (user level) or pass with --config <file>.
+# Precedence (low → high): built-in defaults < user config < --config file < MCP_TERMINAL_* env < CLI flags.
+# A project file (.mcp-terminal.toml in the default cwd) may only make things stricter.
+# Run `termctl config` to see the effective result.
+
+[security]
+# workspace = every session runs inside a macOS Seatbelt sandbox (sandbox-exec)
+# host      = no OS sandbox (policy rules and approvals still apply)
+profile = "workspace"
+
+# A session's cwd must be inside one of these roots (symlinks are resolved).
+# `--workspace <dir>` on the command line replaces this list with [dir].
+allowed_roots = ["~/Projects", "/tmp"]
+# default_cwd = "~/Projects/demo"
+
+# Decision for commands no rule matches: allow | ask | deny
+default_decision = "allow"
+# Built-in guard rails (sudo/su = deny, rm -rf / ~ = deny, rm -rf <dir> = ask,
+# curl … | sh = ask, git push --force = ask, …). A built-in "deny" cannot be
+# relaxed by rules; set this to false only if you really know what you are doing.
+builtin_rules = true
+
+# Rules are glob patterns over the parsed command ("git push *" also matches "git push").
+# Every segment of a pipeline / && chain / $( ) / sh -c "…" is checked; the strictest wins.
+[[security.rules]]
+match = ["docker *", "podman *"]
+decision = "ask"
+reason = "containers can mount the host file system"
+
+[[security.rules]]
+match = ["rm -rf node_modules", "rm -rf dist", "rm -rf build"]
+decision = "allow"
+cwd = "~/Projects"          # only inside this directory
+
+[security.sandbox]
+# Writable locations. Placeholders: {cwd} (session cwd), {tmpdir}, {darwin_cache}, {home}, ~
+allow_write = ["{cwd}", "/tmp", "{tmpdir}", "{darwin_cache}", "~/.npm", "~/Library/Caches"]
+# Unreadable paths (credentials). Added on top of nothing: list everything you want.
+deny_read = ["~/.ssh", "~/.aws", "~/.gnupg", "~/.config/gh", "~/.netrc", "~/.docker/config.json", "~/.kube/config", "~/Library/Keychains"]
+# allow | localhost (loopback only) | deny
+network = "allow"
+# extra_rules = ['(allow file-write* (subpath "/Volumes/Scratch"))']
+
+[security.env]
+# allowlist = sessions only inherit the variables below; all = inherit everything except deny_patterns
+inherit = "allowlist"
+# allowlist = ["PATH", "HOME", "LANG", "LC_*", ...]   # see defaults with `termctl config`
+# Variables matching these patterns are removed and their values masked in output.
+# deny_patterns = ["*_TOKEN", "*_SECRET", "*_KEY", "AWS_*", ...]
+scrub_after_rc = true
+[security.env.set]
+# FORCE_COLOR = "0"
+
+[security.approval]
+# auto   = ask through the MCP client (elicitation) if supported, else a macOS dialog, else termctl
+# elicit | dialog | cli (termctl approve <id>) | deny (never run "ask" commands)
+mode = "auto"
+ttl_s = 300
+dialog_timeout_s = 60
+
+[security.redact]
+enabled = true
+# secrets = ["literal-value-to-mask"]
+# patterns = [{ name = "internal_token", regex = "itk_[A-Za-z0-9]{32}" }]
+
+[shell]
+# program = "/bin/zsh"      # default: $SHELL
+login = true
+resolve_login_env = true    # pick up PATH from your login shell even when started from a GUI app
+history = "off"             # do not write agent commands into your shell history
+rc = "user"                 # user = load your .zshrc/.bashrc; clean = start without rc files
+
+[limits]
+max_sessions = 16
+ring_buffer_bytes = 4194304       # per session, in memory
+global_buffer_bytes = 67108864    # all sessions; oldest output is evicted (still on disk if spilled)
+default_read_bytes = 16384
+max_read_bytes = 65536
+default_wait_ms = 10000           # how long run/exec wait before returning "still running"
+max_wait_ms = 30000
+default_run_timeout_s = 600       # terminal_run kills the command after this (0 = never)
+idle_ttl_s = 3600                 # close sessions without activity after an hour (0 = never)
+retain_after_exit_s = 1800        # keep output of finished sessions readable this long
+spill_max_bytes = 104857600       # per session on-disk output log
+spill_retention_days = 7
+default_cols = 120
+default_rows = 40
+
+[audit]
+enabled = true
+# path = "~/.local/state/mcp-terminal/audit"
+record_output = "hash"            # none | hash (SHA-256 of output, never the content)
+
+[output]
+# render = human/LLM-friendly text block (+ structuredContent); json = JSON text; both
+text_format = "render"

@@ -1,0 +1,65 @@
+{
+  "name": "mcp-terminal",
+  "version": "0.1.0",
+  "description": "MCP server that lets agents create and control local terminal sessions on macOS (PTY, incremental output cursors, shell integration, Seatbelt sandbox, approvals, audit).",
+  "type": "module",
+  "main": "dist/server.js",
+  "bin": {
+    "mcp-terminal": "dist/bin/mcp-terminal.js",
+    "termctl": "dist/bin/termctl.js"
+  },
+  "files": [
+    "dist",
+    "scripts",
+    "config.example.toml",
+    "README.md",
+    "LICENSE"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/postbuild.mjs",
+    "postinstall": "node scripts/postinstall.mjs",
+    "test": "npm run build && vitest run",
+    "test:unit": "vitest run test/unit",
+    "start": "node dist/bin/mcp-terminal.js"
+  },
+  "keywords": [
+    "mcp",
+    "terminal",
+    "pty",
+    "agent",
+    "model-context-protocol",
+    "macos",
+    "sandbox"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "@xterm/headless": "6.0.0",
+    "node-pty": "1.1.0",
+    "smol-toml": "1.9.1",
+    "tree-sitter-bash": "0.25.1",
+    "web-tree-sitter": "0.27.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  },
+  "author": "dogeheng",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dogeheng/MCP-server-controller.git"
+  },
+  "homepage": "https://github.com/dogeheng/MCP-server-controller#readme",
+  "bugs": {
+    "url": "https://github.com/dogeheng/MCP-server-controller/issues"
+  }
+}
