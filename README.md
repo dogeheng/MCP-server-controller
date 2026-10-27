@@ -22,6 +22,12 @@
 | 审计 | JSONL 审计日志，按实例做哈希链，`termctl audit verify` 可检测篡改；只记录输出哈希，不记录输出内容 |
 | 生命周期 | 关闭会话时按 SIGHUP → SIGTERM → SIGKILL 升级，覆盖进程组、tty 上的作业和已脱离的 `nohup` 进程；SQLite 注册表记录会话与观察到的进程组，服务崩溃重启后自动对账并清理孤儿进程 |
 
+## Agent Skill
+
+配套的免费技能包见 [`skills/mcp-terminal-controller`](skills/mcp-terminal-controller/SKILL.md)。它指导 Agent 选择一次性命令或持久会话、续读长任务、处理交互输入与审批，并在完成后清理会话。技能包与本项目同为 MIT 许可证。
+
+将 `skills/mcp-terminal-controller` 文件夹放到客户端支持的 skill 目录，或通过支持该格式的市场加载。**技能包不包含 MCP 服务，也不会自动获得终端权限**：仍需按下文安装本地服务，并在支持本地 stdio MCP 的客户端中配置连接。macOS 平台限制不变。
+
 ## 环境要求
 
 macOS（已在 macOS 26.5 / Apple Silicon 上测试；所用 Seatbelt 规则在较早版本上同样可用，但未逐一验证），Node.js 22.13 及以上（需要内置的 `node:sqlite`）。不需要 Xcode：node-pty 自带 macOS 预编译二进制，bash 解析器使用 WASM。
